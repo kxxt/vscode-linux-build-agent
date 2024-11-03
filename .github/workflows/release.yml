@@ -1,12 +1,50 @@
-name: sysroot
+name: release
 
 on:
   push:
     tags:
       - "*"
 
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+  ripgrep:
+    needs: create-release
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: 'riscv64gc-unknown-linux-musl'
+            linker: 'riscv64-linux-gnu-gcc'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: BurntSushi/ripgrep
+          ref: '14.1.1'
+      - uses: taiki-e/upload-rust-binary-action@v1
+        env:
+          RUSTFLAGS: -C linker=${{ matrix.linker }}
+        with:
+          target: ${{ matrix.target }}
+          bin: rg
+          build-tool: cargo
+
   sysroot:
+    needs: create-release
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -58,17 +96,6 @@ jobs:
           set -e
           cd toolchain-dir
           tar -czf ${{ matrix.pkg }}${{ matrix.suffix }}.tar.gz ${{ matrix.pkg }}
-
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          draft: false
-          prerelease: false
 
       - name: Publish artifact
         uses: actions/upload-release-asset@v1
