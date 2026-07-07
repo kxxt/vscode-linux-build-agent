@@ -3,7 +3,7 @@ ARG TAG=20.04
 FROM ${REPO}:${TAG}
 
 ARG DEBIAN_FRONTEND=noninteractive
-# ARG NODE_VERSION="24.15.0"
+ARG NODE_VERSION="24.15.0"
 
 # ubuntu keeps its i386/amd64 and other architecture repos separate
 # the default i386/amd64 packages can be found in http://archive.ubuntu.com while all other architectures are in http://ports.ubuntu.com/
@@ -42,13 +42,11 @@ RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 1
 RUN python --version
 
 # setup Node.js
-# RUN curl -L -O https://unofficial-builds.nodejs.org/download/release/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-riscv64.tar.gz && \
-#     tar -xzf node-v${NODE_VERSION}-linux-riscv64.tar.gz && \
-#     cp -R node-v${NODE_VERSION}-linux-riscv64/* /usr/local/ && \
-#     rm -rf node-v${NODE_VERSION}-linux-riscv64* && \
-#     node --version
-RUN curl --silent --location https://deb.nodesource.com/setup_24.x | sudo -E bash -
-RUN apt-get update && apt-get install -y nodejs
+RUN curl -L -O https://unofficial-builds.nodejs.org/download/release/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-riscv64.tar.gz && \
+    tar -xzf node-v${NODE_VERSION}-linux-riscv64.tar.gz && \
+    cp -R node-v${NODE_VERSION}-linux-riscv64/* /usr/local/ && \
+    rm -rf node-v${NODE_VERSION}-linux-riscv64* && \
+    node --version
 
 # install node-gyp
 RUN npm install -g node-gyp
